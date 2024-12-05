@@ -1,0 +1,111 @@
+import pygame
+import sys
+
+# Constants
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+FPS = 60
+
+class GameEngine:
+    def __init__(self, title="Game Engine", width=SCREEN_WIDTH, height=SCREEN_HEIGHT):
+        pygame.init()
+        self.screen = pygame.display.set_mode((width, height))
+        pygame.display.set_caption(title)
+        self.clock = pygame.time.Clock()
+        self.running = True
+        self.scenes = {}
+        self.current_scene = None
+
+    def add_scene(self, name, scene):
+        """Add a scene to the engine."""
+        self.scenes[name] = scene
+
+    def switch_scene(self, name):
+        """Switch to a specific scene."""
+        if name in self.scenes:
+            self.current_scene = self.scenes[name]
+            self.current_scene.start()
+
+    def run(self):
+        """Main game loop."""
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                if self.current_scene:
+                    self.current_scene.handle_event(event)
+
+            if self.current_scene:
+                self.current_scene.update()
+                self.current_scene.render(self.screen)
+
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
+        pygame.quit()
+        sys.exit()
+
+
+class Scene:
+    def __init__(self, engine):
+        self.engine = engine
+        self.objects = []
+
+    def start(self):
+        """Called when the scene starts."""
+        pass
+
+    def handle_event(self, event):
+        """Handle input events."""
+        for obj in self.objects:
+            obj.handle_event(event)
+
+    def update(self):
+        """Update game objects."""
+        for obj in self.objects:
+            obj.update()
+
+    def render(self, screen):
+        """Render game objects."""
+        screen.fill((0, 0, 0))  # Clear the screen with black
+        for obj in self.objects:
+            obj.render(screen)
+
+
+class GameObject:
+    def __init__(self, x, y, width, height, color):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.color = color
+
+    def handle_event(self, event):
+        """Handle input (default: do nothing)."""
+        pass
+
+    def update(self):
+        """Update object state (default: do nothing)."""
+        pass
+
+    def render(self, screen):
+        """Render object to the screen."""
+        pygame.draw.rect(screen, self.color, self.rect)
+
+
+# Example Usage
+class ExampleScene(Scene):
+    def start(self):
+        """Initialize the scene."""
+        player = GameObject(100, 100, 50, 50, (255, 0, 0))  # Red square
+        self.objects.append(player)
+
+
+if __name__ == "__main__":
+    engine = GameEngine()
+    
+    # Create and add scenes
+    example_scene = ExampleScene(engine)
+    engine.add_scene("example", example_scene)
+    
+    # Switch to the example scene
+    engine.switch_scene("example")
+    
+    # Run the engine
+    engine.run()
